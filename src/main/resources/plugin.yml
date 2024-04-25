@@ -1,0 +1,4 @@
+name: earthquake
+version: '${project.version}'
+main: org.ichiru.earthquake.Earthquake
+api-version: '1.20'
