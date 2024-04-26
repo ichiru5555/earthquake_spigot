@@ -22,7 +22,7 @@ public final class Earthquake extends JavaPlugin {
     @Override
     public void onEnable() {
         new BukkitRunnable() {
-            private String previousId = "";
+            private String previousId;
 
             public void run() {
                 HttpClient client = HttpClient.newHttpClient();
@@ -32,7 +32,6 @@ public final class Earthquake extends JavaPlugin {
 
                 client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                         .thenAccept(response -> {
-                            getLogger().info("API Response: " + response.body());
 
                             try {
                                 JSONArray jsonArray = new JSONArray(response.body());
@@ -47,6 +46,9 @@ public final class Earthquake extends JavaPlugin {
                                     previousId = id;
 
                                     int maxScale = earthquakeInfo.getJSONObject("earthquake").getInt("maxScale");
+                                    if (maxScale < 30){
+                                        return;
+                                    }
                                     String str_maxScale = convertMaxScale(maxScale);
 
                                     String domesticTsunami = convertDomesticTsunami(earthquakeInfo.getJSONObject("earthquake").getString("domesticTsunami"));
@@ -98,7 +100,7 @@ public final class Earthquake extends JavaPlugin {
 
             private void broadcastToOnlinePlayers(int maxScale,String str_maxScale, String domesticTsunami, String pref, String addr) {
                 ChatColor color;
-                if (maxScale <= 40) {
+                if (maxScale <= 30) {
                     color = ChatColor.DARK_AQUA;
                 } else if (maxScale <= 55) {
                     color = ChatColor.RED;
@@ -128,13 +130,12 @@ public final class Earthquake extends JavaPlugin {
                 }
             }
             private void showEarthquakeInfoOnScreen(String str_maxScale, String domesticTsunami, String pref, String addr) {
-                String message = ChatColor.RED + "地震情報\n"
+                TextComponent message = new TextComponent(ChatColor.RED + "地震情報\n"
                         + ChatColor.DARK_PURPLE + "震度: " + str_maxScale + "\n"
                         + ChatColor.DARK_PURPLE + "津波情報: " + domesticTsunami + "\n"
-                        + ChatColor.DARK_PURPLE + "発生場所: " + pref + " " + addr;
-
+                        + ChatColor.DARK_PURPLE + "発生場所: " + pref + " " + addr);
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, message);
                 }
             }
         }.runTaskTimerAsynchronously(this, 0L, 200L);
